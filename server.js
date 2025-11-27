@@ -1,72 +1,119 @@
 const express = require("express");
 const fs = require("fs");
-const app = express();
+const path = require("path");
 
+const app = express();
 app.use(express.json());
 app.use(express.static(__dirname));
 
-let users = [];
-let alreadyDrawn = []; // <--- speichert, wer schon gezogen wurde!
-
+const DATA_FILE = path.join(__dirname, "data.json");
 const ADMIN_PASSWORD = "wichtel123";
 
-// ----------------------------------------------------
-// ➤ Teilnehmer registrieren
-// ----------------------------------------------------
+// 🔹 Daten laden
+function loadData() {
+    if (!fs.existsSync(DATA_FILE)) {
+        fs.writeFileSync(DATA_FILE, JSON.stringify({ users: [], pairs: {} }, null, 2));
+    }
+    return JSON.parse(fs.readFileSync(DATA_FILE));
+}
+
+// 🔹 Daten speichern
+function saveData(data) {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+}
+
+// 🔹 Teilnehmer registrieren
 app.post("/api/register", (req, res) => {
-    const { name, address } = req.body;
+    const data = loadData();
     const id = Date.now().toString();
 
-    users.push({ id, name, address, hasDrawn: false });
+    data.users.push({
+        id,
+        name: req.body.name,
+        address: req.body.address
+    });
+
+    saveData(data);
+
     res.json({ ok: true, id });
 });
 
-// ----------------------------------------------------
-// ➤ Zufällige Person ziehen, ohne doppelte Ziehungen
-// ----------------------------------------------------
-app.get("/api/draw", (req, res) => {
+// 🔹 Ergebnis für einen User abrufen
+app.get("/api/result", (req, res) => {
     const id = req.query.id;
+    const data = loadData();
 
-    const me = users.find(u => u.id === id);
-    if (!me) return res.json({ message: "Fehler: Dich gibt es nicht." });
+    if (!data.pairs[id]) {
+        return res.json({ message: "Der Admin hat die Ziehung noch nicht gestartet." });
+    }
 
-    if (me.hasDrawn)
-        return res.json({ message: "Du hast schon jemanden gezogen!" });
-
-    // Liste der ziehbaren Personen (ohne mich + ohne schon gezogene)
-    const candidates = users.filter(u =>
-        u.id !== id && !alreadyDrawn.includes(u.id)
-    );
-
-    if (candidates.length === 0)
-        return res.json({ message: "Leider gibt es niemanden mehr der gezogen werden kann." });
-
-    // Zufällig wählen
-    const random = candidates[Math.floor(Math.random() * candidates.length)];
-
-    // markieren
-    me.hasDrawn = true;
-    alreadyDrawn.push(random.id);
+    const targetId = data.pairs[id];
+    const target = data.users.find(u => u.id === targetId);
 
     res.json({
-        message: `Du hast gezogen: ${random.name} – Adresse: ${random.address}`
+        ok: true,
+        name: target.name,
+        address: target.address
     });
 });
 
-// ----------------------------------------------------
-// ➤ Adminbereich
-// ----------------------------------------------------
+// 🔹 ADMIN: Alle Paare erzeugen
+app.get("/api/admin/drawall", (req, res) => {
+    const pw = req.query.pw;
+    if (pw !== ADMIN_PASSWORD)
+        return res.json({ ok: false, message: "Falsches Passwort" });
+
+    const data = loadData();
+    const users = [...data.users];
+
+    if (users.length < 2) {
+        return res.json({ ok: false, message: "Zu wenige Teilnehmer" });
+    }
+
+    // Fisher-Yates Shuffle
+    for (let i = users.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        [users[i], users[j]] = [users[j], users[i]];
+    }
+
+    // Jeder bekommt den nächsten, letzter bekommt den ersten
+    let pairs = {};
+    for (let i = 0; i < users.length; i++) {
+        let giver = users[i].id;
+        let receiver = users[(i + 1) % users.length].id;
+        pairs[giver] = receiver;
+    }
+
+    data.pairs = pairs;
+    saveData(data);
+
+    res.json({ ok: true, message: "Alle Paarungen erfolgreich erstellt!", pairs });
+});
+
+// 🔹 ADMIN: Teilnehmerliste anzeigen
 app.get("/api/admin", (req, res) => {
     const pw = req.query.pw;
     if (pw !== ADMIN_PASSWORD)
         return res.json({ ok: false });
 
-    res.json({
-        ok: true,
-        users,
-        alreadyDrawn
-    });
+    const data = loadData();
+    res.json({ ok: true, users: data.users, pairs: data.pairs });
 });
 
-// ----------------------------------------------------
+// 🔹 ADMIN: Benutzer löschen
+app.delete("/api/admin/delete", (req, res) => {
+    const pw = req.query.pw;
+    const id = req.query.id;
+
+    if (pw !== ADMIN_PASSWORD)
+        return res.json({ ok: false });
+
+    const data = loadData();
+    data.users = data.users.filter(u => u.id !== id);
+
+    saveData(data);
+    res.json({ ok: true });
+});
+
+// Server starten
 app.listen(3000, () => console.log("Server läuft auf Port 3000"));
