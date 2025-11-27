@@ -1,76 +1,72 @@
 const express = require("express");
-const app = express();
 const fs = require("fs");
-const path = require("path");
+const app = express();
 
 app.use(express.json());
+app.use(express.static(__dirname));
 
-// Statische Dateien aus /public ausliefern
-app.use(express.static(path.join(__dirname, "public")));
+let users = [];
+let alreadyDrawn = []; // <--- speichert, wer schon gezogen wurde!
 
-// Pfad der JSON-Datei
-const dataPath = path.join(__dirname, "data.json");
-
-// Falls Datei existiert → laden, sonst neue Struktur
-let data = {
-    users: []
-};
-
-if (fs.existsSync(dataPath)) {
-    data = JSON.parse(fs.readFileSync(dataPath, "utf8"));
-}
-
-// Admin Passwort
 const ADMIN_PASSWORD = "wichtel123";
 
-// 🔹 Teilnehmer registrieren
+// ----------------------------------------------------
+// ➤ Teilnehmer registrieren
+// ----------------------------------------------------
 app.post("/api/register", (req, res) => {
     const { name, address } = req.body;
-
     const id = Date.now().toString();
-    data.users.push({ id, name, address, hasDrawn: false });
 
-    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-
+    users.push({ id, name, address, hasDrawn: false });
     res.json({ ok: true, id });
 });
 
-// 🔹 zufällige Person ziehen
+// ----------------------------------------------------
+// ➤ Zufällige Person ziehen, ohne doppelte Ziehungen
+// ----------------------------------------------------
 app.get("/api/draw", (req, res) => {
     const id = req.query.id;
-    const me = data.users.find(u => u.id === id);
 
-    if (!me)
-        return res.json({ message: "Fehler: Dich gibt es nicht." });
-
-    const others = data.users.filter(u => u.id !== id);
-
-    if (others.length === 0)
-        return res.json({ message: "Du bist der erste! Es gibt noch niemanden zum Ziehen." });
+    const me = users.find(u => u.id === id);
+    if (!me) return res.json({ message: "Fehler: Dich gibt es nicht." });
 
     if (me.hasDrawn)
         return res.json({ message: "Du hast schon jemanden gezogen!" });
 
-    const random = others[Math.floor(Math.random() * others.length)];
-    me.hasDrawn = true;
+    // Liste der ziehbaren Personen (ohne mich + ohne schon gezogene)
+    const candidates = users.filter(u =>
+        u.id !== id && !alreadyDrawn.includes(u.id)
+    );
 
-    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
+    if (candidates.length === 0)
+        return res.json({ message: "Leider gibt es niemanden mehr der gezogen werden kann." });
+
+    // Zufällig wählen
+    const random = candidates[Math.floor(Math.random() * candidates.length)];
+
+    // markieren
+    me.hasDrawn = true;
+    alreadyDrawn.push(random.id);
 
     res.json({
         message: `Du hast gezogen: ${random.name} – Adresse: ${random.address}`
     });
 });
 
-// 🔹 Adminbereich
+// ----------------------------------------------------
+// ➤ Adminbereich
+// ----------------------------------------------------
 app.get("/api/admin", (req, res) => {
     const pw = req.query.pw;
-
     if (pw !== ADMIN_PASSWORD)
         return res.json({ ok: false });
 
-    res.json({ ok: true, users: data.users });
+    res.json({
+        ok: true,
+        users,
+        alreadyDrawn
+    });
 });
 
-// Server starten
+// ----------------------------------------------------
 app.listen(3000, () => console.log("Server läuft auf Port 3000"));
-
