@@ -29,7 +29,8 @@ function drawPerson() {
         if (data.error) {
             msg.textContent = "❌ " + data.error;
         } else {
-            msg.textContent = `🎉 Du hast gezogen: ${data.targetName}\nAdresse: ${data.address}`;
+            msg.textContent =
+                `🎉 Du hast gezogen: ${data.targetName}\n📬 Adresse: ${data.address}`;
         }
     });
 }

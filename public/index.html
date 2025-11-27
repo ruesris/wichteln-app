@@ -2,33 +2,35 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Wichteln</title>
+    <title>🎄 Wichteln 2025</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<div id="snow"></div>
+
 <div class="container">
 
-    <h1>🎁 Wichteln Web‑App</h1>
+    <h1 class="title">🎁 Wichteln 2025 🎄</h1>
 
     <section class="box">
-        <h2>1. Deine Daten eintragen</h2>
-        <input id="nameInput" type="text" placeholder="Dein Name">
-        <input id="addressInput" type="text" placeholder="Deine Adresse">
+        <h2>📝 Deine Daten eintragen</h2>
+        <input id="nameInput" type="text" placeholder="🎅 Dein Name">
+        <input id="addressInput" type="text" placeholder="📬 Deine Adresse">
         <button onclick="registerUser()">Speichern</button>
         <p id="registerMsg" class="msg"></p>
     </section>
 
     <section class="box">
-        <h2>2. Person ziehen</h2>
-        <input id="drawNameInput" type="text" placeholder="Dein Name">
+        <h2>🎲 Person ziehen</h2>
+        <input id="drawNameInput" type="text" placeholder="👤 Dein Name">
         <button onclick="drawPerson()">Person ziehen</button>
         <p id="drawMsg" class="msg"></p>
     </section>
 
     <section class="box">
-        <h2>Admin Bereich</h2>
-        <input id="adminPwInput" type="password" placeholder="Admin Passwort">
+        <h2>🔐 Admin Bereich</h2>
+        <input id="adminPwInput" type="password" placeholder="🔑 Admin Passwort">
         <button onclick="adminLoad()">Anmelden</button>
         <pre id="adminOutput" class="admin-box"></pre>
     </section>
