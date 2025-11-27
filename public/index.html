@@ -10,21 +10,22 @@
             margin: 0;
             padding: 0;
             font-family: "Arial", sans-serif;
-            background: url("https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=1920&auto=format&fit=crop") no-repeat center center fixed;
-            background-size: cover;
+            background: linear-gradient(#0d1b2a, #1b263b);
             color: white;
             text-align: center;
+            overflow-x: hidden;
         }
 
         .container {
-            margin-top: 140px;
-            background: rgba(0,0,0,0.55);
+            margin-top: 120px;
+            background: rgba(0,0,0,0.45);
             padding: 25px;
             border-radius: 15px;
             width: 90%;
             max-width: 450px;
             margin-left: auto;
             margin-right: auto;
+            backdrop-filter: blur(4px);
         }
 
         input, button {
@@ -40,55 +41,32 @@
             background: #d62828;
             color: white;
             cursor: pointer;
+            transition: 0.2s;
         }
 
         button:hover {
             background: #b51f1f;
         }
 
-        /* 🎅 Santa Animation */
-        #santa {
+        /* ❄ CSS Schneeflocken – NICHTS mit Bildern! */
+        .snowflake {
             position: fixed;
-            top: 40px;
-            left: -300px;
-            width: 250px;
-            z-index: 1000;
-            animation: flySanta 12s linear infinite;
+            top: -10px;
+            color: white;
+            font-size: 1em;
+            pointer-events: none;
+            user-select: none;
+            animation: fall linear infinite;
+            opacity: 0.9;
         }
 
-        @keyframes flySanta {
-            0% { left: -350px; top: 60px; }
-            50% { left: 50%; top: 90px; }
-            100% { left: 120%; top: 40px; }
-        }
-
-        /* 💡 Weihnachtslichterkette */
-        .lights {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            height: 70px;
-           background: url("https://png.pngtree.com/png-clipart/20220726/original/pngtree-christmas-light-string-png-image_8395091.png") repeat-x;
-            background-size: contain;
-            z-index: 999;
-            animation: blink 1.4s infinite;
-        }
-
-        @keyframes blink {
-            0% { filter: brightness(1); }
-            50% { filter: brightness(1.9); }
-            100% { filter: brightness(1); }
+        @keyframes fall {
+            0% { transform: translateY(-10px) rotate(0deg); }
+            100% { transform: translateY(110vh) rotate(720deg); }
         }
     </style>
-
 </head>
 <body>
-
-    <!-- 💡 Lichterkette -->
-    <div class="lights"></div>
-
-    <!-- 🎅 Santa fliegt -->
-   <img id="santa" src="https://png.pngtree.com/png-clipart/20230919/original/pngtree-santa-claus-riding-on-reindeer-sleigh-png-image_12208703.png" alt="Santa">
 
     <div class="container">
         <h1>🎁 Wichteln</h1>
@@ -139,6 +117,24 @@
             let data = await res.json();
             document.getElementById("result").innerText = data.message;
         }
+
+        /* ❄ Schneeflocken erzeugen */
+        function createSnowflake() {
+            const snowflake = document.createElement("div");
+            snowflake.classList.add("snowflake");
+            snowflake.textContent = "❄";
+            snowflake.style.left = Math.random() * 100 + "vw";
+            snowflake.style.fontSize = (Math.random() * 12 + 10) + "px";
+            snowflake.style.animationDuration = (Math.random() * 5 + 5) + "s";
+
+            document.body.appendChild(snowflake);
+
+            setTimeout(() => {
+                snowflake.remove();
+            }, 12000);
+        }
+
+        setInterval(createSnowflake, 150);
     </script>
 
 </body>
