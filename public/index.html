@@ -10,14 +10,18 @@
             margin: 0;
             padding: 0;
             font-family: "Arial", sans-serif;
-            background: linear-gradient(#0d1b2a, #1b263b);
+
+            /* ✨ Einfarbig + Glow-Effekt ohne Bilder */
+            background: radial-gradient(circle at top, rgba(255,255,255,0.15), rgba(27,38,59,1) 60%);
+            background-color: #1b263b;
+            
             color: white;
             text-align: center;
             overflow-x: hidden;
         }
 
         .container {
-            margin-top: 120px;
+            margin-top: 140px;
             background: rgba(0,0,0,0.45);
             padding: 25px;
             border-radius: 15px;
@@ -41,14 +45,13 @@
             background: #d62828;
             color: white;
             cursor: pointer;
-            transition: 0.2s;
         }
 
         button:hover {
             background: #b51f1f;
         }
 
-        /* ❄ CSS Schneeflocken – NICHTS mit Bildern! */
+        /* ❄ Schneeflocken ohne Bilder */
         .snowflake {
             position: fixed;
             top: -10px;
@@ -64,6 +67,22 @@
             0% { transform: translateY(-10px) rotate(0deg); }
             100% { transform: translateY(110vh) rotate(720deg); }
         }
+
+        /* 🛠 Adminbereich */
+        #adminBox {
+            margin-top: 40px;
+            background: rgba(0,0,0,0.5);
+            padding: 20px;
+            border-radius: 12px;
+            display: none;
+        }
+
+        #adminList div {
+            margin: 8px 0;
+            padding: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -78,17 +97,39 @@
         <button onclick="drawPerson()">Person ziehen</button>
 
         <p id="result"></p>
+
+        <hr style="margin:25px 0; border:1px solid rgba(255,255,255,0.2)">
+
+        <h3>🔐 Admin Login</h3>
+        <input id="adminPass" type="password" placeholder="Admin Passwort">
+        <button onclick="loginAdmin()">Login</button>
+
+        <div id="adminBox">
+            <h2>📋 Eingetragene Personen</h2>
+            <div id="adminList">Wird geladen…</div>
+        </div>
     </div>
 
     <script>
+        /* ❄ Schneeflocken */
+        function createSnowflake() {
+            const f = document.createElement("div");
+            f.classList.add("snowflake");
+            f.textContent = "❄";
+            f.style.left = Math.random() * 100 + "vw";
+            f.style.fontSize = (Math.random() * 12 + 10) + "px";
+            f.style.animationDuration = (Math.random() * 5 + 5) + "s";
+            document.body.appendChild(f);
+            setTimeout(() => f.remove(), 12000);
+        }
+        setInterval(createSnowflake, 150);
+
+        /* 🌟 User eintragen */
         async function registerUser() {
             let name = document.getElementById("name").value.trim();
             let address = document.getElementById("address").value.trim();
 
-            if (!name || !address) {
-                alert("Bitte Name und Adresse eingeben!");
-                return;
-            }
+            if (!name || !address) return alert("Bitte beide Felder ausfüllen!");
 
             let res = await fetch("/api/register", {
                 method: "POST",
@@ -100,13 +141,10 @@
             document.getElementById("result").innerText = data.message;
         }
 
+        /* 🎁 Person ziehen */
         async function drawPerson() {
             let name = document.getElementById("name").value.trim();
-
-            if (!name) {
-                alert("Bitte gib zuerst deinen Namen ein!");
-                return;
-            }
+            if (!name) return alert("Bitte gib deinen Namen ein!");
 
             let res = await fetch("/api/draw", {
                 method: "POST",
@@ -118,23 +156,30 @@
             document.getElementById("result").innerText = data.message;
         }
 
-        /* ❄ Schneeflocken erzeugen */
-        function createSnowflake() {
-            const snowflake = document.createElement("div");
-            snowflake.classList.add("snowflake");
-            snowflake.textContent = "❄";
-            snowflake.style.left = Math.random() * 100 + "vw";
-            snowflake.style.fontSize = (Math.random() * 12 + 10) + "px";
-            snowflake.style.animationDuration = (Math.random() * 5 + 5) + "s";
+        /* 🔐 Admin Login */
+        async function loginAdmin() {
+            let pass = document.getElementById("adminPass").value;
 
-            document.body.appendChild(snowflake);
+            let res = await fetch("/api/admin", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password: pass })
+            });
 
-            setTimeout(() => {
-                snowflake.remove();
-            }, 12000);
+            let data = await res.json();
+
+            if (!data.success) return alert("Falsches Passwort!");
+
+            document.getElementById("adminBox").style.display = "block";
+
+            /* Liste anzeigen */
+            document.getElementById("adminList").innerHTML = "";
+            data.users.forEach(u => {
+                let div = document.createElement("div");
+                div.textContent = u.name + " — " + u.address;
+                document.getElementById("adminList").appendChild(div);
+            });
         }
-
-        setInterval(createSnowflake, 150);
     </script>
 
 </body>
