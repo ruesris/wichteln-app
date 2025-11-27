@@ -4,34 +4,42 @@ const path = require('path');
 
 const app = express();
 
-// >>> HIER ein eigenes starkes Passwort eintragen <<<
-const ADMIN_PASSWORD = 'admin22passwort';
+// >>> HIER dein Admin-Passwort einsetzen <<<
+const ADMIN_PASSWORD = "DEIN_ADMIN_PASSWORT";
+
 const DATA_FILE = path.join(__dirname, 'data.json');
 
-// Static Files (Frontend)
-app.use(express.static(path.join(__dirname, 'public')));
+// Middleware
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Daten laden / speichern
+// -------------------------
+// Hilfsfunktionen
+// -------------------------
 function loadData() {
   try {
-    const raw = fs.readFileSync(DATA_FILE, 'utf8');
+    const raw = fs.readFileSync(DATA_FILE, "utf8");
     return JSON.parse(raw);
-  } catch (e) {
-    return { addresses: {}, pairs: {} };
+  } catch (err) {
+    return {
+      addresses: {}, // name → {name, address}
+      drawn: {},     // name → gezogene Person
+    };
   }
 }
 
 function saveData(data) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
+  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), "utf8");
 }
 
-// 1) Teilnehmer trägt seine Adresse ein
-app.post('/api/registerAddress', (req, res) => {
+// -------------------------
+// 1) Adresse eintragen
+// -------------------------
+app.post('/api/register', (req, res) => {
   const { name, address } = req.body || {};
 
   if (!name || !address) {
-    return res.status(400).json({ error: 'Name und Adresse sind Pflichtfelder.' });
+    return res.status(400).json({ error: "Name und Adresse erforderlich." });
   }
 
   const data = loadData();
@@ -39,59 +47,68 @@ app.post('/api/registerAddress', (req, res) => {
 
   data.addresses[key] = {
     name: name.trim(),
-    address: address.trim()
+    address: address.trim(),
   };
 
   saveData(data);
-  res.json({ ok: true, message: 'Adresse gespeichert.' });
+  res.json({ ok: true, message: "Adresse gespeichert." });
 });
 
-// 2) Admin trägt ein, wer wen gezogen hat
-app.post('/api/setPair', (req, res) => {
-  const { adminPassword, drawer, target } = req.body || {};
+// -------------------------
+// 2) Person ziehen
+// -------------------------
+app.post('/api/draw', (req, res) => {
+  const { name } = req.body || {};
+  if (!name) return res.status(400).json({ error: "Name erforderlich." });
 
-  if (adminPassword !== ADMIN_PASSWORD) {
-    return res.status(403).json({ error: 'Falsches Admin-Passwort.' });
-  }
-
-  if (!drawer || !target) {
-    return res.status(400).json({ error: 'Ziehende Person und beschenkte Person sind Pflichtfelder.' });
-  }
-
+  const drawer = name.trim().toLowerCase();
   const data = loadData();
-  const drawerKey = drawer.trim().toLowerCase();
-  const targetKey = target.trim().toLowerCase();
 
-  data.pairs[drawerKey] = targetKey;
-  saveData(data);
+  const participants = Object.keys(data.addresses);
 
-  res.json({ ok: true, message: `${drawer} beschenkt jetzt ${target}.` });
-});
-
-// 3) Teilnehmer ruft Adresse der gezogenen Person ab
-app.get('/api/getTargetAddress', (req, res) => {
-  const drawer = req.query.drawer;
-
-  if (!drawer) {
-    return res.status(400).json({ error: 'Bitte gib deinen eigenen Namen an.' });
-  }
-
-  const data = loadData();
-  const drawerKey = drawer.trim().toLowerCase();
-
-  const targetKey = data.pairs[drawerKey];
-
-  if (!targetKey) {
-    return res.status(404).json({ error: 'Für diesen Namen wurde kein Wichtel-Paar gefunden.' });
-  }
-
-  const target = data.addresses[targetKey];
-
-  if (!target) {
-    return res.status(404).json({
-      error: 'Für die gezogene Person wurde noch keine Adresse hinterlegt.'
+  // Noch nicht genug Teilnehmer
+  if (participants.length < 2) {
+    return res.json({
+      ok: false,
+      error: "Du bist die erste eingetragene Person. Es gibt noch niemanden, den du ziehen kannst!"
     });
   }
+
+  // Prüfen ob Name existiert
+  if (!data.addresses[drawer]) {
+    return res.status(404).json({ error: "Du bist nicht eingetragen." });
+  }
+
+  // Prüfen, ob er schon gezogen hat
+  if (data.drawn[drawer]) {
+    const targetKey = data.drawn[drawer];
+    const t = data.addresses[targetKey];
+    return res.json({
+      ok: true,
+      already: true,
+      targetName: t.name,
+      address: t.address
+    });
+  }
+
+  // Mögliche Kandidaten: alle außer sich selbst
+  const candidates = participants.filter(p => p !== drawer);
+
+  if (candidates.length === 0) {
+    return res.json({
+      ok: false,
+      error: "Niemand verfügbar zum Ziehen."
+    });
+  }
+
+  // Zufällig auswählen
+  const randomIndex = Math.floor(Math.random() * candidates.length);
+  const drawnPersonKey = candidates[randomIndex];
+
+  data.drawn[drawer] = drawnPersonKey;
+  saveData(data);
+
+  const target = data.addresses[drawnPersonKey];
 
   res.json({
     ok: true,
@@ -100,8 +117,29 @@ app.get('/api/getTargetAddress', (req, res) => {
   });
 });
 
-// Server starten
+// -------------------------
+// 3) Admin – Liste aller Einträge
+// -------------------------
+app.get('/api/admin/list', (req, res) => {
+  const password = req.query.password;
+
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(403).json({ error: "Falsches Admin-Passwort." });
+  }
+
+  const data = loadData();
+
+  res.json({
+    ok: true,
+    participants: data.addresses,
+    drawn: data.drawn
+  });
+});
+
+// -------------------------
+// Server Starten
+// -------------------------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Wichtel-Seite läuft auf http://localhost:${PORT}`);
+  console.log(`Wichtel-WebApp läuft auf http://localhost:${PORT}`);
 });
