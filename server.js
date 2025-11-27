@@ -5,7 +5,7 @@ const path = require('path');
 const app = express();
 
 // >>> HIER ein eigenes starkes Passwort eintragen <<<
-const ADMIN_PASSWORD = 'ÄNDERN_DU_BIST_ADMIN_123!';
+const ADMIN_PASSWORD = 'admin22passwort';
 const DATA_FILE = path.join(__dirname, 'data.json');
 
 // Static Files (Frontend)
