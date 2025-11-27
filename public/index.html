@@ -1,186 +1,561 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wichteln 🎄</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Wichtel-Website — Ziehen & Eintragen</title>
+<style>
+  :root{
+    --bg:#0b2540;
+    --card:#0f3957;
+    --accent:#ffd166;
+    --muted:rgba(255,255,255,0.85);
+  }
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: radial-gradient(ellipse at 10% 10%, rgba(255,255,255,0.03), transparent 20%),
+                linear-gradient(180deg,var(--bg) 0%, #071425 100%);
+    color:var(--muted);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px;
+    box-sizing:border-box;
+    overflow:hidden;
+  }
 
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: "Arial", sans-serif;
+  /* Card */
+  .container{
+    width:100%;
+    max-width:980px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border-radius:16px;
+    box-shadow:0 10px 30px rgba(2,6,23,0.6);
+    padding:28px;
+    position:relative;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,0.04);
+  }
 
-            /* ✨ Einfarbig + Glow-Effekt ohne Bilder */
-            background: radial-gradient(circle at top, rgba(255,255,255,0.15), rgba(27,38,59,1) 60%);
-            background-color: #1b263b;
-            
-            color: white;
-            text-align: center;
-            overflow-x: hidden;
-        }
+  header{
+    display:flex;
+    gap:16px;
+    align-items:center;
+    margin-bottom:16px;
+  }
+  .logo{
+    width:64px;height:64px;border-radius:12px;
+    display:grid;place-items:center;
+    background: linear-gradient(135deg,var(--card), rgba(255,255,255,0.03));
+    border:1px solid rgba(255,255,255,0.03);
+    box-shadow:0 4px 14px rgba(2,6,23,0.4);
+    flex:0 0 64px;
+  }
+  .logo h1{margin:0;font-size:20px;color:var(--accent);letter-spacing:0.6px}
+  .title{flex:1}
+  .title h2{margin:0;font-size:20px}
+  .title p{margin:2px 0 0 0;font-size:13px;color:rgba(255,255,255,0.6)}
 
-        .container {
-            margin-top: 140px;
-            background: rgba(0,0,0,0.45);
-            padding: 25px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 450px;
-            margin-left: auto;
-            margin-right: auto;
-            backdrop-filter: blur(4px);
-        }
+  main{
+    display:grid;
+    grid-template-columns: 1fr 360px;
+    gap:18px;
+  }
 
-        input, button {
-            width: 90%;
-            padding: 12px;
-            margin-top: 12px;
-            border-radius: 10px;
-            border: none;
-            font-size: 16px;
-        }
+  /* Form */
+  form{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.02);
+  }
+  label{display:block;font-size:13px;margin-bottom:6px;color:rgba(255,255,255,0.85)}
+  input[type="text"], textarea, select{
+    width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);
+    background:rgba(255,255,255,0.02);color:var(--muted);box-sizing:border-box;font-size:14px;
+    outline:none;
+  }
+  textarea{min-height:72px;resize:vertical}
+  .row{display:flex;gap:10px}
+  .row > *{flex:1}
 
-        button {
-            background: #d62828;
-            color: white;
-            cursor: pointer;
-        }
+  .btn{
+    display:inline-block;padding:10px 14px;border-radius:10px;border:0;background:var(--accent);color:#07202b;
+    cursor:pointer;font-weight:600;
+  }
+  .btn-secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+  .muted{color:rgba(255,255,255,0.6);font-size:13px}
 
-        button:hover {
-            background: #b51f1f;
-        }
+  /* Right column: participants & draw */
+  .panel{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.02);
+  }
+  .list{max-height:330px;overflow:auto;padding-right:8px}
+  .participant{
+    display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:8px;margin-bottom:8px;
+    background:linear-gradient(90deg, rgba(255,255,255,0.01), transparent);
+    border:1px solid rgba(255,255,255,0.02);
+    font-size:14px;
+  }
+  .small{font-size:12px;color:rgba(255,255,255,0.7)}
 
-        /* ❄ Schneeflocken ohne Bilder */
-        .snowflake {
-            position: fixed;
-            top: -10px;
-            color: white;
-            font-size: 1em;
-            pointer-events: none;
-            user-select: none;
-            animation: fall linear infinite;
-            opacity: 0.9;
-        }
+  /* Notification */
+  .notice{
+    margin:10px 0;padding:10px;border-radius:8px;background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.03);
+    font-size:14px;color:var(--muted)
+  }
 
-        @keyframes fall {
-            0% { transform: translateY(-10px) rotate(0deg); }
-            100% { transform: translateY(110vh) rotate(720deg); }
-        }
+  footer{margin-top:16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
 
-        /* 🛠 Adminbereich */
-        #adminBox {
-            margin-top: 40px;
-            background: rgba(0,0,0,0.5);
-            padding: 20px;
-            border-radius: 12px;
-            display: none;
-        }
+  /* snowflakes (pure CSS + unicode) */
+  .snowfield{pointer-events:none;position:absolute;inset:0;z-index:0;overflow:hidden}
+  .snow{
+    position:absolute;top:-10%;font-size:14px;opacity:0.9;user-select:none;
+    animation-name:fall;animation-timing-function:linear;animation-iteration-count:infinite;
+    transform:translateX(0);
+  }
 
-        #adminList div {
-            margin: 8px 0;
-            padding: 8px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-        }
-    </style>
+  @keyframes fall{
+    to{transform:translateY(120vh) rotate(360deg)}
+  }
+
+  /* small responsive */
+  @media (max-width:900px){
+    main{grid-template-columns:1fr; }
+    .logo{display:none}
+  }
+</style>
 </head>
 <body>
+  <div class="container" role="application" aria-label="Wichtel-Website">
+    <div class="snowfield" id="snowfield" aria-hidden="true"></div>
 
-    <div class="container">
-        <h1>🎁 Wichteln</h1>
+    <header>
+      <div class="logo"><h1>🎁</h1></div>
+      <div class="title">
+        <h2>Wichtel-Ziehung</h2>
+        <p>Trage dich mit Name & Adresse ein — ziehe anschließend eine Person (nur einmal).</p>
+      </div>
+    </header>
 
-        <input id="name" type="text" placeholder="Dein Name">
-        <input id="address" type="text" placeholder="Deine Adresse">
+    <main>
+      <section>
+        <form id="regForm" autocomplete="off">
+          <div style="display:flex;gap:10px;align-items:flex-end;">
+            <div style="flex:1">
+              <label for="name">Name</label>
+              <input id="name" type="text" required placeholder="Vorname Nachname" />
+            </div>
+            <div style="width:160px">
+              <label for="short">Optional: Kurzer Hinweis</label>
+              <input id="short" type="text" placeholder="z.B. 'Keine Nüsse'" />
+            </div>
+          </div>
 
-        <button onclick="registerUser()">Eintragen</button>
-        <button onclick="drawPerson()">Person ziehen</button>
+          <label for="address" style="margin-top:10px">Adresse</label>
+          <textarea id="address" placeholder="Straße, PLZ, Ort" required></textarea>
 
-        <p id="result"></p>
+          <div style="display:flex;gap:8px;margin-top:12px;align-items:center;">
+            <button class="btn" id="btnRegister" type="submit">Eintragen</button>
+            <button class="btn btn-secondary" id="btnClear" type="button">Felder löschen</button>
+            <div style="flex:1"></div>
+            <small class="muted">Einträge werden lokal gespeichert — Export/Import möglich.</small>
+          </div>
 
-        <hr style="margin:25px 0; border:1px solid rgba(255,255,255,0.2)">
+          <div id="regMsg" class="notice" style="display:none;margin-top:12px"></div>
+        </form>
 
-        <h3>🔐 Admin Login</h3>
-        <input id="adminPass" type="password" placeholder="Admin Passwort">
-        <button onclick="loginAdmin()">Login</button>
+        <div style="margin-top:18px;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)">
+          <h3 style="margin:0 0 8px 0">Ziehung</h3>
+          <p class="muted" style="margin:0 0 8px 0">Wenn du dich eingetragen hast, kannst du hier eine Person ziehen. Jede Person kann genau einmal ziehen; jede gezogene Person kann nur einmal gezogen werden.</p>
 
-        <div id="adminBox">
-            <h2>📋 Eingetragene Personen</h2>
-            <div id="adminList">Wird geladen…</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn" id="btnDraw" type="button">Person ziehen</button>
+            <button class="btn btn-secondary" id="btnBecomeCurrent" type="button">Als mich markieren</button>
+            <div style="flex:1"></div>
+          </div>
+
+          <div id="drawResult" class="notice" style="display:none;margin-top:12px"></div>
         </div>
-    </div>
+      </section>
 
-    <script>
-        /* ❄ Schneeflocken */
-        function createSnowflake() {
-            const f = document.createElement("div");
-            f.classList.add("snowflake");
-            f.textContent = "❄";
-            f.style.left = Math.random() * 100 + "vw";
-            f.style.fontSize = (Math.random() * 12 + 10) + "px";
-            f.style.animationDuration = (Math.random() * 5 + 5) + "s";
-            document.body.appendChild(f);
-            setTimeout(() => f.remove(), 12000);
-        }
-        setInterval(createSnowflake, 150);
+      <aside class="panel" aria-live="polite">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <h3 style="margin:0">Teilnehmer <span id="count" class="small"></span></h3>
+          <div style="flex:1"></div>
+          <button class="btn btn-secondary" id="btnExport">Export</button>
+          <button class="btn btn-secondary" id="btnImport">Import</button>
+        </div>
 
-        /* 🌟 User eintragen */
-        async function registerUser() {
-            let name = document.getElementById("name").value.trim();
-            let address = document.getElementById("address").value.trim();
+        <div class="list" id="participantList" tabindex="0"></div>
 
-            if (!name || !address) return alert("Bitte beide Felder ausfüllen!");
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary" id="btnReset">Alle löschen</button>
+          <button class="btn btn-secondary" id="btnShowMy" title="Zeigt den aktuellen (in diesem Browser markierten) Eintrag">Mein Eintrag</button>
+          <div style="flex:1"></div>
+        </div>
 
-            let res = await fetch("/api/register", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, address })
-            });
+        <div class="notice" style="margin-top:12px;font-size:13px">
+          Tipp: Wenn mehrere Leute unterschiedliche Geräte benutzen, nutzt den Export/Import, damit alle dieselbe Liste haben.
+        </div>
+      </aside>
+    </main>
 
-            let data = await res.json();
-            document.getElementById("result").innerText = data.message;
-        }
+    <footer>
+      <div class="muted">LocalStorage: <span id="storageKey" style="font-family:monospace">wichteln_participants</span></div>
+      <div class="muted">Made with ❤️ — komplett clientseitig</div>
+    </footer>
+  </div>
 
-        /* 🎁 Person ziehen */
-        async function drawPerson() {
-            let name = document.getElementById("name").value.trim();
-            if (!name) return alert("Bitte gib deinen Namen ein!");
+<script>
+/* -----------------------
+   Simple Wichtel App
+   - Speichert Teilnehmer in localStorage (key 'wichteln_participants')
+   - Jeder Teilnehmer: {id,name,address,short,drawnBy:null,drawnTo:null}
+   - currentUserId stored in 'wichteln_currentUserId' (nur pro Browser)
+   -----------------------*/
 
-            let res = await fetch("/api/draw", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name })
-            });
+/* Utilities */
+const STORAGE_KEY = 'wichteln_participants';
+const CURRENT_KEY = 'wichteln_currentUserId';
 
-            let data = await res.json();
-            document.getElementById("result").innerText = data.message;
-        }
+function saveParticipants(arr){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  render();
+}
+function loadParticipants(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  try{ return raw ? JSON.parse(raw) : []; } catch(e){ return [] }
+}
+function setCurrentUserId(id){
+  if(id) localStorage.setItem(CURRENT_KEY,id);
+  else localStorage.removeItem(CURRENT_KEY);
+  render();
+}
+function getCurrentUserId(){ return localStorage.getItem(CURRENT_KEY) }
 
-        /* 🔐 Admin Login */
-        async function loginAdmin() {
-            let pass = document.getElementById("adminPass").value;
+/* small id */
+function uid(){
+  return 'id-' + Math.random().toString(36).slice(2,11);
+}
 
-            let res = await fetch("/api/admin", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ password: pass })
-            });
+/* DOM */
+const form = document.getElementById('regForm');
+const nameInput = document.getElementById('name');
+const addressInput = document.getElementById('address');
+const shortInput = document.getElementById('short');
+const btnRegister = document.getElementById('btnRegister');
+const btnClear = document.getElementById('btnClear');
+const regMsg = document.getElementById('regMsg');
 
-            let data = await res.json();
+const participantList = document.getElementById('participantList');
+const countSpan = document.getElementById('count');
+const btnExport = document.getElementById('btnExport');
+const btnImport = document.getElementById('btnImport');
+const btnReset = document.getElementById('btnReset');
+const btnShowMy = document.getElementById('btnShowMy');
 
-            if (!data.success) return alert("Falsches Passwort!");
+const btnDraw = document.getElementById('btnDraw');
+const drawResult = document.getElementById('drawResult');
+const btnBecomeCurrent = document.getElementById('btnBecomeCurrent');
 
-            document.getElementById("adminBox").style.display = "block";
+document.getElementById('storageKey').textContent = STORAGE_KEY;
 
-            /* Liste anzeigen */
-            document.getElementById("adminList").innerHTML = "";
-            data.users.forEach(u => {
-                let div = document.createElement("div");
-                div.textContent = u.name + " — " + u.address;
-                document.getElementById("adminList").appendChild(div);
-            });
-        }
-    </script>
+/* Register */
+form.addEventListener('submit', e=>{
+  e.preventDefault();
+  const name = nameInput.value.trim();
+  const address = addressInput.value.trim();
+  const short = shortInput.value.trim();
+  if(!name || !address){
+    showReg('Bitte Name und Adresse angeben.', true); return;
+  }
+  let participants = loadParticipants();
 
+  // Duplicate check: same name + same address
+  const duplicate = participants.find(p => p.name.toLowerCase()===name.toLowerCase() && p.address.toLowerCase()===address.toLowerCase());
+  if(duplicate){
+    showReg('Dieser Eintrag existiert bereits.', true); return;
+  }
+
+  const newP = { id: uid(), name, address, short: short||'', drawnBy:null, drawnTo:null, timestamp:Date.now() };
+  participants.push(newP);
+  saveParticipants(participants);
+  setCurrentUserId(newP.id); // mark this browser as this user
+  nameInput.value=''; addressInput.value=''; shortInput.value='';
+  showReg('Erfolgreich eingetragen und als "ich" markiert. Du kannst jetzt ziehen (sofern genug andere Teilnehmer vorhanden).');
+});
+
+function showReg(msg, isErr){
+  regMsg.style.display='block';
+  regMsg.textContent=msg;
+  regMsg.style.borderColor = isErr ? 'rgba(255,90,90,0.2)' : 'rgba(255,255,255,0.03)';
+  setTimeout(()=>{ regMsg.style.display='none' }, 5000);
+}
+btnClear.addEventListener('click', ()=>{ nameInput.value=''; addressInput.value=''; shortInput.value=''; });
+
+/* Render list */
+function render(){
+  const participants = loadParticipants();
+  participantList.innerHTML='';
+  countSpan.textContent = `(${participants.length})`;
+
+  // sort by time
+  participants.sort((a,b)=>a.timestamp - b.timestamp);
+
+  if(participants.length===0){
+    participantList.innerHTML = '<div class="muted">Noch keine Teilnehmer. Trage dich ein!</div>';
+  } else {
+    participants.forEach(p=>{
+      const div = document.createElement('div');
+      div.className='participant';
+      const left = document.createElement('div');
+      const nameEl = document.createElement('div');
+      nameEl.textContent = p.name + (p.short ? ' — ' + p.short : '');
+      nameEl.style.fontWeight='600';
+      const addrEl = document.createElement('div');
+      addrEl.textContent = p.address;
+      addrEl.className='small';
+      left.appendChild(nameEl);
+      left.appendChild(addrEl);
+
+      const right = document.createElement('div');
+      right.style.textAlign='right';
+      right.style.minWidth='120px';
+      if(p.drawnBy){
+        // someone drew this person
+        const by = participants.find(x=>x.id===p.drawnBy);
+        right.innerHTML = `<div class="small">Gezogen von</div><div style="font-weight:700">${by ? by.name : p.drawnBy}</div>`;
+      } else {
+        right.innerHTML = `<div class="small">Noch frei</div>`;
+      }
+
+      // mark current user
+      if(getCurrentUserId() === p.id){
+        div.style.outline = '2px solid rgba(255,209,102,0.12)';
+        right.innerHTML += '<div class="small" style="margin-top:6px;color:var(--accent)">Das bist du (dieser Browser)</div>';
+      }
+
+      div.appendChild(left); div.appendChild(right);
+      participantList.appendChild(div);
+    });
+  }
+
+  // draw button state
+  updateDrawUI();
+}
+
+/* Drawing logic */
+function updateDrawUI(){
+  const participants = loadParticipants();
+  const currentId = getCurrentUserId();
+  btnDraw.disabled = true;
+  drawResult.style.display='none';
+
+  if(!currentId){
+    btnBecomeCurrent.style.display='inline-block';
+    btnBecomeCurrent.textContent = 'Als mich markieren';
+    btnDraw.title = 'Markiere dich zuerst (z.B. nach Eintrag).';
+    return;
+  } else {
+    btnBecomeCurrent.style.display='inline-block';
+    btnBecomeCurrent.textContent = 'Meine Markierung entfernen';
+  }
+
+  const current = participants.find(p=>p.id===currentId);
+  if(!current){
+    // current id present but participant missing -> clear current
+    setCurrentUserId(null);
+    btnDraw.disabled = true;
+    return;
+  }
+
+  // check if participants length <=1
+  if(participants.length <= 1){
+    btnDraw.disabled = true;
+    btnDraw.title = 'Noch keine anderen Personen zum Ziehen.';
+    drawResult.style.display='block';
+    drawResult.textContent = 'Du bist momentan die erste eingetragene Person — es gibt noch niemand anderen zum Ziehen.';
+    return;
+  }
+
+  // If current already drew someone, disable
+  if(current.drawnTo){
+    btnDraw.disabled = true;
+    btnDraw.title = 'Du hast bereits gezogen.';
+    drawResult.style.display='block';
+    const target = participants.find(p=>p.id===current.drawnTo);
+    drawResult.innerHTML = 'Du hast bereits gezogen: ' + (target ? `<strong>${escapeHtml(target.name)}</strong>, Adresse: ${escapeHtml(target.address)}` : current.drawnTo);
+    return;
+  }
+
+  // available recipients: not self and not already drawnBy someone else
+  const available = participants.filter(p => p.id !== currentId && !p.drawnBy);
+  if(available.length===0){
+    btnDraw.disabled = true;
+    btnDraw.title = 'Keine verfügbaren Personen mehr (alle wurden bereits gezogen).';
+    drawResult.style.display='block';
+    drawResult.textContent = 'Keine verfügbaren Personen: alle anderen wurden bereits gezogen.';
+    return;
+  }
+
+  // ready to draw
+  btnDraw.disabled = false;
+  btnDraw.title = 'Ziehe jetzt eine zufällige Person.';
+}
+
+/* Perform draw */
+btnDraw.addEventListener('click', ()=>{
+  const participants = loadParticipants();
+  const currentId = getCurrentUserId();
+  const current = participants.find(p=>p.id===currentId);
+  if(!current){ alert('Markiere dich zuerst als Teilnehmer in diesem Browser.'); return; }
+
+  // select available pool
+  const pool = participants.filter(p => p.id !== currentId && !p.drawnBy);
+  if(pool.length===0){
+    updateDrawUI();
+    return;
+  }
+
+  // random pick
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+
+  // save: mark picked as drawnBy current, mark current.drawnTo
+  const updated = participants.map(p=>{
+    if(p.id === pick.id) return {...p, drawnBy: currentId};
+    if(p.id === currentId) return {...p, drawnTo: pick.id};
+    return p;
+  });
+  saveParticipants(updated);
+
+  // show result with address
+  drawResult.style.display='block';
+  drawResult.innerHTML = `Du hast gezogen: <strong>${escapeHtml(pick.name)}</strong><br>Adresse: <div style="font-family:monospace;margin-top:6px">${escapeHtml(pick.address)}</div>`;
+  updateDrawUI();
+});
+
+/* mark/unmark current */
+btnBecomeCurrent.addEventListener('click', ()=>{
+  const participants = loadParticipants();
+  const currentId = getCurrentUserId();
+  if(currentId){
+    // unmark
+    setCurrentUserId(null);
+    return;
+  }
+  // if none, show a select to pick
+  if(participants.length===0){ alert('Keine Teilnehmer zum Markieren vorhanden. Trage dich zuerst ein.'); return; }
+  // choose first as default - but provide a quick prompt
+  const names = participants.map((p,i) => `${i+1}) ${p.name}`).join('\\n');
+  const pick = prompt('Wähle die Zahl deines Eintrags, um diesen Browser als dich zu markieren:\\n\\n' + names + '\\n\\nGib die Nummer ein:');
+  const idx = parseInt(pick) - 1;
+  if(Number.isInteger(idx) && idx >= 0 && idx < participants.length){
+    setCurrentUserId(participants[idx].id);
+  } else {
+    alert('Ungültige Auswahl.');
+  }
+});
+
+/* Export / Import */
+btnExport.addEventListener('click', ()=>{
+  const participants = loadParticipants();
+  const blob = new Blob([JSON.stringify(participants, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'wichteln_export.json'; document.body.appendChild(a); a.click();
+  a.remove(); URL.revokeObjectURL(url);
+});
+
+btnImport.addEventListener('click', ()=>{
+  const input = document.createElement('input');
+  input.type='file'; input.accept='.json,application/json';
+  input.onchange = e=>{
+    const f = input.files[0]; if(!f) return;
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      try{
+        const arr = JSON.parse(ev.target.result);
+        if(!Array.isArray(arr)) throw new Error('Ungültiges Format');
+        // Merge intelligently: skip exact duplicates (name+address)
+        const existing = loadParticipants();
+        let added = 0;
+        arr.forEach(item=>{
+          if(!item.name || !item.address) return;
+          const dup = existing.find(p=>p.name.toLowerCase()===item.name.toLowerCase() && p.address.toLowerCase()===item.address.toLowerCase());
+          if(!dup){
+            const newP = {
+              id: item.id || uid(),
+              name: item.name,
+              address: item.address,
+              short: item.short || '',
+              drawnBy: item.drawnBy || null,
+              drawnTo: item.drawnTo || null,
+              timestamp: item.timestamp || Date.now()
+            };
+            existing.push(newP); added++;
+          }
+        });
+        saveParticipants(existing);
+        alert(`Import beendet. Hinzugefügt: ${added} Einträge.`);
+      }catch(err){
+        alert('Import fehlerhaft: ' + err.message);
+      }
+    };
+    reader.readAsText(f);
+  };
+  input.click();
+});
+
+/* Reset */
+btnReset.addEventListener('click', ()=>{
+  if(!confirm('Alle Einträge löschen? Diese Aktion ist endgültig für diesen Browser.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(CURRENT_KEY);
+  render();
+});
+
+/* Show my */
+btnShowMy.addEventListener('click', ()=>{
+  const id = getCurrentUserId();
+  if(!id){ alert('Du bist in diesem Browser nicht markiert. Markiere dich zuerst (z. B. nach Eintrag).'); return; }
+  const participants = loadParticipants();
+  const me = participants.find(p => p.id === id);
+  if(!me){ alert('Dein Eintrag wurde nicht gefunden. Vielleicht wurde die Liste importiert/überschrieben.'); return; }
+  alert(`Dein Eintrag:\\n\\nName: ${me.name}\\nAdresse: ${me.address}\\nHinweis: ${me.short || '-'}`);
+});
+
+/* escape for safe display */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* Snow generation (pure CSS + unicode characters) */
+(function makeSnow(){
+  const target = document.getElementById('snowfield');
+  const flakes = 28;
+  const chars = ['❄','✻','✼','✺'];
+  for(let i=0;i<flakes;i++){
+    const el = document.createElement('div');
+    el.className='snow';
+    el.textContent = chars[Math.floor(Math.random()*chars.length)];
+    const size = Math.random()*18 + 8;
+    el.style.fontSize = size + 'px';
+    el.style.left = (Math.random()*100) + '%';
+    el.style.opacity = (Math.random()*0.6 + 0.3).toFixed(2);
+    const dur = (Math.random()*18 + 12).toFixed(2);
+    el.style.animationDuration = dur + 's';
+    el.style.animationDelay = (Math.random()*-20) + 's';
+    el.style.transform = `translateY(-10vh) rotate(${Math.random()*360}deg)`;
+    target.appendChild(el);
+  }
+})();
+
+/* initial render */
+render();
+
+</script>
 </body>
 </html>
