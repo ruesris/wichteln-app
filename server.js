@@ -5,7 +5,7 @@ const path = require('path');
 const app = express();
 
 // >>> HIER dein Admin-Passwort einsetzen <<<
-const ADMIN_PASSWORD = "DEIN_ADMIN_PASSWORT";
+const ADMIN_PASSWORD = "admin22passwort";
 
 const DATA_FILE = path.join(__dirname, 'data.json');
 
