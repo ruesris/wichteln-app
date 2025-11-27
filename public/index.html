@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Wichtel-Adresse – Secret Santa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+      background: #020617;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.8rem;
+      text-align: center;
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #9ca3af;
+      margin-bottom: 1.5rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.25rem;
+    }
+
+    @media (min-width: 900px) {
+      .grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .card {
+      background: #020617;
+      border-radius: 12px;
+      padding: 1rem;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .card h2 {
+      font-size: 1.05rem;
+      margin: 0 0 0.5rem 0;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      margin-bottom: 0.25rem;
+      color: #cbd5f5;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 0.45rem 0.55rem;
+      border-radius: 8px;
+      border: 1px solid #4b5563;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.9rem;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 1px #38bdf8;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      background: linear-gradient(135deg, #22c55e, #06b6d4);
+      color: #020617;
+      font-weight: 600;
+      margin-top: 0.3rem;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .result-box {
+      margin-top: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .result-box.ok {
+      background: rgba(22, 163, 74, 0.12);
+      border: 1px solid rgba(22, 163, 74, 0.6);
+      color: #bbf7d0;
+    }
+
+    .result-box.error {
+      background: rgba(220, 38, 38, 0.12);
+      border: 1px solid rgba(248, 113, 113, 0.7);
+      color: #fecaca;
+    }
+
+    .section-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+      margin-bottom: 0.25rem;
+    }
+
+    .badge-admin {
+      display: inline-block;
+      padding: 0.15rem 0.4rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: rgba(249, 115, 22, 0.15);
+      border: 1px solid rgba(249, 115, 22, 0.6);
+      color: #fed7aa;
+      margin-left: 0.4rem;
+    }
+
+    .badge-user {
+      display: inline-block;
+      padding: 0.15rem 0.4rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.6);
+      color: #bfdbfe;
+      margin-left: 0.4rem;
+    }
+
+    .address-display {
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Wichtel-Adresse</h1>
+    <div class="subtitle">
+      Jeder gibt nur seine eigene Adresse ein – später siehst du nur die Adresse der Person, die du beschenkst. 🎁
+    </div>
+
+    <div class="grid">
+      <!-- 1) Eigene Adresse hinterlegen -->
+      <section class="card">
+        <div class="section-label">Schritt 1</div>
+        <h2>
+          Meine Adresse hinterlegen
+          <span class="badge-user">Teilnehmer</span>
+        </h2>
+
+        <form id="form-address">
+          <label for="name">Dein Name (genau wie in der Wichtel-Liste)</label>
+          <input type="text" id="name" required />
+
+          <label for="address">Deine Versandadresse</label>
+          <textarea
+            id="address"
+            placeholder="Straße Hausnummer&#10;PLZ Ort&#10;(optional: Land)"
+            required
+          ></textarea>
+
+          <button type="submit">Adresse speichern</button>
+          <div class="hint">
+            Deine Adresse wird nur gespeichert, damit die Person, die dich gezogen hat, sie sehen kann.
+          </div>
+        </form>
+
+        <div id="address-status" class="result-box" style="display:none;"></div>
+      </section>
+
+      <!-- 2) Admin verknüpft Ziehende ↔ Beschenkte -->
+      <section class="card">
+        <div class="section-label">Schritt 2</div>
+        <h2>
+          Wichtel-Paare eintragen
+          <span class="badge-admin">Admin</span>
+        </h2>
+
+        <form id="form-pair">
+          <label for="admin-password">Admin-Passwort</label>
+          <input type="password" id="admin-password" placeholder="Nur für die organisierende Person" required />
+
+          <label for="drawer">Name der ziehenden Person</label>
+          <input type="text" id="drawer" placeholder="z.B. Max" required />
+
+          <label for="target">Name der Person, die beschenkt wird</label>
+          <input type="text" id="target" placeholder="z.B. Anna" required />
+
+          <button type="submit">Paar speichern</button>
+          <div class="hint">
+            Das machst nur du als Organisator: Wer beschenkt wen?
+          </div>
+        </form>
+
+        <div id="pair-status" class="result-box" style="display:none;"></div>
+      </section>
+
+      <!-- 3) Adresse der gezogenen Person abrufen -->
+      <section class="card">
+        <div class="section-label">Schritt 3</div>
+        <h2>
+          Adresse meines Wichtels abrufen
+          <span class="badge-user">Teilnehmer</span>
+        </h2>
+
+        <form id="form-lookup">
+          <label for="lookup-name">Dein Name (du als Schenkender)</label>
+          <input type="text" id="lookup-name" placeholder="z.B. Max" required />
+
+          <button type="submit">Adresse anzeigen</button>
+        </form>
+
+        <div id="lookup-status" class="result-box" style="display:none;"></div>
+        <div id="lookup-result" class="result-box ok" style="display:none;">
+          <div><strong>Du beschenkst:</strong> <span id="result-target-name"></span></div>
+          <div class="address-display" id="result-address"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    async function postJSON(url, data) {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json.error || 'Unbekannter Fehler');
+      }
+      return json;
+    }
+
+    // 1) Adresse speichern
+    const formAddress = document.getElementById('form-address');
+    const addressStatus = document.getElementById('address-status');
+
+    formAddress.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      addressStatus.style.display = 'none';
+
+      const name = document.getElementById('name').value.trim();
+      const address = document.getElementById('address').value.trim();
+
+      if (!name || !address) return;
+
+      try {
+        const btn = formAddress.querySelector('button');
+        btn.disabled = true;
+        const res = await postJSON('/api/registerAddress', { name, address });
+
+        addressStatus.textContent = res.message || 'Adresse gespeichert.';
+        addressStatus.className = 'result-box ok';
+        addressStatus.style.display = 'block';
+      } catch (err) {
+        addressStatus.textContent = err.message;
+        addressStatus.className = 'result-box error';
+        addressStatus.style.display = 'block';
+      } finally {
+        formAddress.querySelector('button').disabled = false;
+      }
+    });
+
+    // 2) Wichtel-Paare setzen
+    const formPair = document.getElementById('form-pair');
+    const pairStatus = document.getElementById('pair-status');
+
+    formPair.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      pairStatus.style.display = 'none';
+
+      const adminPassword = document.getElementById('admin-password').value;
+      const drawer = document.getElementById('drawer').value.trim();
+      const target = document.getElementById('target').value.trim();
+
+      if (!adminPassword || !drawer || !target) return;
+
+      try {
+        const btn = formPair.querySelector('button');
+        btn.disabled = true;
+        const res = await postJSON('/api/setPair', {
+          adminPassword,
+          drawer,
+          target
+        });
+
+        pairStatus.textContent = res.message || 'Paar gespeichert.';
+        pairStatus.className = 'result-box ok';
+        pairStatus.style.display = 'block';
+      } catch (err) {
+        pairStatus.textContent = err.message;
+        pairStatus.className = 'result-box error';
+        pairStatus.style.display = 'block';
+      } finally {
+        formPair.querySelector('button').disabled = false;
+      }
+    });
+
+    // 3) Adresse des gezogenen Wichtels abrufen
+    const formLookup = document.getElementById('form-lookup');
+    const lookupStatus = document.getElementById('lookup-status');
+    const lookupResult = document.getElementById('lookup-result');
+    const resultTargetName = document.getElementById('result-target-name');
+    const resultAddress = document.getElementById('result-address');
+
+    formLookup.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      lookupStatus.style.display = 'none';
+      lookupResult.style.display = 'none';
+
+      const name = document.getElementById('lookup-name').value.trim();
+      if (!name) return;
+
+      try {
+        const btn = formLookup.querySelector('button');
+        btn.disabled = true;
+
+        const params = new URLSearchParams({ drawer: name });
+        const res = await fetch('/api/getTargetAddress?' + params.toString());
+        const json = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(json.error || 'Fehler beim Abrufen der Adresse.');
+        }
+
+        resultTargetName.textContent = json.targetName;
+        resultAddress.textContent = json.address;
+        lookupResult.style.display = 'block';
+      } catch (err) {
+        lookupStatus.textContent = err.message;
+        lookupStatus.className = 'result-box error';
+        lookupStatus.style.display = 'block';
+      } finally {
+        formLookup.querySelector('button').disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
